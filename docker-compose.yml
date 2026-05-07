@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  gvia:
+    build: .
+    container_name: gvia
+    ports:
+      - "8818:8818"
+    volumes:
+      - ./config.json:/app/config.json
+    environment:
+      PORT: "8818"
+    restart: unless-stopped

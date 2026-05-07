@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,8 +17,18 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-type Config struct {
-	Data map[string]interface{} `json:"data"`
+// 获取端口配置，优先使用环境变量 PORT，默认 8080
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	// 验证端口是否为有效数字
+	if _, err := strconv.Atoi(port); err != nil {
+		fmt.Printf("警告: 环境变量 PORT 的值 '%s' 无效，使用默认端口 8080\n", port)
+		port = "8080"
+	}
+	return port
 }
 
 // SSE 客户端管理
@@ -173,11 +184,13 @@ func main() {
 	// 优先加载本地 www 目录，如果不存在则使用编译的静态资源
 	LoadWebSource(e)
 
-	//启动http server, 并监听8080端口，冒号（:）前面为空的意思就是绑定网卡所有Ip地址，本机支持的所有ip地址都可以访问。
+	//启动http server, 并监听配置端口，冒号（:）前面为空的意思就是绑定网卡所有Ip地址，本机支持的所有ip地址都可以访问。
 	go initWebServerHTTP(e)
 
 	e.Logger.SetOutput(io.Discard) // 禁用 Echo 默认日志输出
-	fmt.Println("服务运行于: 0.0.0.0:8080")
+	fmt.Printf("服务运行于: %s\n", getPort())
+
+	// 永久阻塞，确保服务器不退出
 	select {}
 }
 
@@ -191,12 +204,10 @@ func StaticAssets(root string) *assetfs.AssetFS {
 }
 
 func initWebServerHTTP(mainWeb *echo.Echo) { // 初始化WEB控制台服务
-	err := mainWeb.Start("0.0.0.0:8080")
-	if err != nil {
-		fmt.Printf("错误: 启动HTTP服务失败: %s\n", err.Error())
-		return
+	addr := "0.0.0.0:" + getPort()
+	if err := mainWeb.Start(addr); err != nil {
+		fmt.Printf("错误: HTTP服务: %s\n", err.Error())
 	}
-	fmt.Println("成功: HTTP服务已启动")
 }
 
 func LoadWebSource(e *echo.Echo) {

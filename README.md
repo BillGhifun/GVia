@@ -103,3 +103,17 @@ Ghifun
 ---
 
 ⭐ 如果你觉得这个项目有帮助，欢迎 Star！
+
+## Docker 部署
+
+### 前置条件
+- 确保已编译对应架构的二进制文件：`GVia_amd64`、`GVia_arm64` 或 `GVia_arm`
+- 准备 `config.json` 配置文件
+
+### 使用 docker-compose
+
+# 使用docker-compose 在已有容器需要更新情况下：
+docker build -t gvia . && docker stop gvia && docker rm gvia && docker-compose up -d
+
+# 使用docker-compose 在没有容器情况下：
+docker build -t gvia . && docker-compose up -d
