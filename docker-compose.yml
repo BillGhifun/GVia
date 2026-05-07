@@ -7,7 +7,9 @@ services:
     ports:
       - "8818:8818"
     volumes:
-      - ./config.json:/app/config.json
+      # 配置文件挂载：宿主机 ./config/ 目录挂载到容器 /app/config/
+      # 确保程序能读取到配置文件
+      - ./config:/app/config
     environment:
       PORT: "8818"
     restart: unless-stopped

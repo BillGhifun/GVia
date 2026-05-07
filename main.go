@@ -7,7 +7,7 @@ import (
 	"mynav/websource"
 	"net/http"
 	"os"
-	"path/filepath"
+	"path"
 	"strconv"
 	"sync"
 	"time"
@@ -16,6 +16,20 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+// 获取程序所在目录
+func getProgramDir() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return "."
+	}
+	return path.Dir(exePath)
+}
+
+// 获取配置文件路径（程序所在目录/config/config.json）
+func getConfigFile() string {
+	return path.Join(getProgramDir(), "config", "config.json")
+}
 
 // 获取端口配置，优先使用环境变量 PORT，默认 8080
 func getPort() string {
@@ -119,7 +133,28 @@ func main() {
 
 	// API 端点 - 获取配置
 	e.GET("/api/config", func(c echo.Context) error {
-		configFile := filepath.Join(".", "config.json")
+		configFile := getConfigFile()
+
+		// 如果配置文件不存在，创建默认配置
+		if _, err := os.Stat(configFile); os.IsNotExist(err) {
+			defaultConfig := map[string]interface{}{
+				"siteTitle":        "GVia",
+				"searchTitle":      "搜索",
+				"searchEngine":     "baidu",
+				"showTitle":        true,
+				"showSearch":       true,
+				"showGroupDivider": true,
+				"bgBlur":           "0",
+				"blur":             "0",
+				"wallpaper":        "wallpaper/012.jpg",
+				"groups":           []interface{}{},
+				"contextMenu":      []interface{}{},
+			}
+			data, _ := json.MarshalIndent(defaultConfig, "", "  ")
+			os.MkdirAll(path.Dir(configFile), 0755)
+			os.WriteFile(configFile, data, 0644)
+			fmt.Printf("信息: 已创建默认配置文件: %s\n", configFile)
+		}
 
 		// 读取配置文件
 		data, err := os.ReadFile(configFile)
@@ -154,8 +189,17 @@ func main() {
 			})
 		}
 
+		// 确保 config 目录存在
+		configDir := path.Join(getProgramDir(), "config")
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			fmt.Printf("错误: 创建配置目录失败: %s\n", err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "创建配置目录失败",
+			})
+		}
+
 		// 将数据写入配置文件
-		configFile := filepath.Join(".", "config.json")
+		configFile := getConfigFile()
 		data, err := json.MarshalIndent(config, "", "  ")
 		if err != nil {
 			fmt.Printf("错误: 序列化配置失败: %s\n", err.Error())
@@ -180,9 +224,12 @@ func main() {
 		})
 	})
 
-	// 静态路由必须后注册，以确保动态路由优先级更高
+	// 静态路由必须后注册，以确保动态路由优先级优先级更高
 	// 优先加载本地 www 目录，如果不存在则使用编译的静态资源
 	LoadWebSource(e)
+
+	// 打印配置文件路径
+	fmt.Printf("配置文件路径: %s\n", getConfigFile())
 
 	//启动http server, 并监听配置端口，冒号（:）前面为空的意思就是绑定网卡所有Ip地址，本机支持的所有ip地址都可以访问。
 	go initWebServerHTTP(e)

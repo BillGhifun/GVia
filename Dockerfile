@@ -15,10 +15,12 @@ COPY GVia_${TARGETARCH} /app/gvia
 # 添加执行权限
 RUN chmod +x /app/gvia
 
+# 创建 config 目录（程序会自动创建配置文件）
+RUN mkdir -p /app/config
+
 # 暴露端口
 ARG PORT=8818
-ENV PORT=${PORT}
-EXPOSE ${PORT}
-
+ENV PORT=8818
+EXPOSE 8818
 # 启动程序
 CMD ["./gvia"]

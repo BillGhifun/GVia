@@ -113,7 +113,7 @@ Ghifun
 ### 使用 docker-compose
 
 # 使用docker-compose 在已有容器需要更新情况下：
-docker build -t gvia . && docker stop gvia && docker rm gvia && docker-compose up -d
+docker build -t gvia . && docker stop gvia || true && docker rm gvia || true && docker-compose up -d
 
 # 使用docker-compose 在没有容器情况下：
 docker build -t gvia . && docker-compose up -d
