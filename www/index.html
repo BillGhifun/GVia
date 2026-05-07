@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人导航</title>
+    <link id="favicon-link" rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/font-awesome.all.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/icon-picker.css">
+</head>
+<body>
+    <div id="app-background"></div>
+    <div id="app-background-fade"></div>
+
+    <div class="top-bar">
+        <button class="icon-btn" id="btn-edit-mode" title="编辑模式"><span class="icon-inner fas fa-edit"></span></button>
+        <div class="settings-wrapper">
+            <button class="icon-btn" id="btn-settings" title="设置"><span class="icon-inner fas fa-cog"></span></button>
+            <div class="settings-panel glass-panel" id="settings-panel">
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-target="tab-appearance">外观</button>
+                    <button class="tab-btn" data-target="tab-general">通用</button>
+                    <button class="tab-btn" data-target="tab-contextmenu">右键菜单</button>
+                </div>
+
+                <div class="tab-content active" id="tab-appearance">
+                    <div class="setting-item">
+                        <label>壁纸链接 (URL)</label>
+                        <input type="text" id="input-wallpaper" placeholder="输入图片 URL...">
+                    </div>
+                    <div class="setting-item">
+                        <label>卡片磨砂度: <span id="blur-value-display">10px</span></label>
+                        <input type="range" id="slider-blur" min="0" max="30" value="10">
+                    </div>
+                    <div class="setting-item">
+                        <label>背景壁纸模糊: <span id="bg-blur-display">0px</span></label>
+                        <input type="range" id="slider-bg-blur" min="0" max="50" value="0">
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-general">
+                    <div class="setting-item">
+                        <label>网站标题 (浏览器标签)</label>
+                        <input type="text" id="input-site-title" placeholder="例如：我的导航">
+                    </div>
+                    <div class="setting-item">
+                        <label>网站图标 (URL 或 Font Awesome)</label>
+                        <input type="text" id="input-site-icon" placeholder="例如：https://example.com/favicon.ico 或 fas fa-home">
+                        <small style="opacity:0.7; font-size:0.8rem; margin-top:4px; display:block;">URL链接将作为浏览器图标，Font Awesome将显示在页面标题旁</small>
+                    </div>
+                    <hr class="divider">
+                    <div class="setting-item">
+                        <label>主标题名称</label>
+                        <input type="text" id="input-title" placeholder="例如：我的导航">
+                    </div>
+                    <div class="setting-item switch-form-group">
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-title" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-text">显示标题名称</span>
+                    </div>
+                    <div class="setting-item switch-form-group">
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-search" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-text">搜索栏显示</span>
+                    </div>
+                    <div class="setting-item switch-form-group">
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-group-divider" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-text">分组分割线显示</span>
+                    </div>
+                    <hr class="divider">
+                    <div class="setting-item">
+                        <label>数据备份与迁移</label>
+                        <button id="btn-export" class="btn-primary full-width mb-10">导出配置 (JSON)</button>
+                        <button id="btn-import-trigger" class="btn-secondary full-width">导入配置 (JSON)</button>
+                        <input type="file" id="input-import" accept=".json" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-contextmenu">
+                    <div class="setting-item">
+                        <label>右键菜单快捷方式</label>
+                        <small style="opacity:0.7; font-size:0.8rem; margin-top:4px; display:block; margin-bottom:8px;">在"添加分组"下方显示的快捷方式</small>
+                        <div id="contextmenu-list"></div>
+                        <button id="btn-add-contextmenu" class="btn-primary full-width mt-10">添加快捷方式</button>
+                        <button id="btn-add-divider" class="btn-secondary full-width mt-5">添加分割线</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div id="search-section" class="search-section">
+            <h1 id="main-title" class="glass-text">我的导航</h1>
+            <div class="search-box glass-panel" id="search-box">
+                <div class="search-engine-icon" id="search-engine-icon">
+                    <img src="https://www.google.com/favicon.ico" alt="Google">
+                </div>
+                <input type="text" id="search-input" placeholder="输入搜索内容...">
+                
+                <!-- 搜索引擎选择器 -->
+                <div class="search-engine-selector" id="search-engine-selector">
+                    <div class="search-engine-option" data-engine="google">
+                        <img src="https://www.google.com/favicon.ico" alt="Google">
+                        <span>Google</span>
+                    </div>
+                    <div class="search-engine-option" data-engine="bing">
+                        <img src="https://www.bing.com/favicon.ico" alt="Bing">
+                        <span>Bing</span>
+                    </div>
+                    <div class="search-engine-option" data-engine="baidu">
+                        <img src="https://www.baidu.com/favicon.ico" alt="百度">
+                        <span>百度</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="groups-container" class="groups-container"></div>
+    </main>
+
+    <div class="modal-overlay" id="card-modal">
+        <div class="modal-content glass-panel">
+            <h3 id="modal-title" class="modal-header">编辑快捷方式</h3>
+            <div class="form-body">
+                <div class="form-group switch-form-group">
+                    <label class="switch">
+                        <input type="checkbox" id="modal-icon-auto" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="switch-text">自动获取图标</span>
+                </div>
+                <div class="form-group" id="modal-icon-wrapper">
+                    <div class="icon-preview-wrapper">
+                        <div id="card-icon-preview"></div>
+                        <input type="text" id="modal-icon" placeholder="输入图标类名或 URL...">
+                    </div>
+                </div>
+                <div class="form-group"><label>标题</label><input type="text" id="modal-card-title"></div>
+                <div class="form-group"><label>描述</label><input type="text" id="modal-desc"></div>
+                <div class="form-group"><label>链接</label><input type="text" id="modal-url"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary modal-close-btn">取消</button>
+                <button id="modal-btn-save" class="btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="group-modal">
+        <div class="modal-content glass-panel">
+            <h3 id="group-modal-title" class="modal-header">编辑分组</h3>
+            <div class="form-body">
+                <div class="form-group">
+                    <label>分组图标</label>
+                    <div id="group-icon-wrapper">
+                        <div class="icon-preview-wrapper">
+                            <div class="icon-preview" id="icon-preview"></div>
+                            <input type="text" id="group-modal-icon" placeholder="输入图标类名或 URL...">
+                        </div>
+                    </div>
+                    <div class="icon-picker" id="icon-picker-panel">
+                        <div class="icon-picker-item selected" data-icon="fas fa-folder"><i class="fas fa-folder"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-tools"><i class="fas fa-tools"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-gamepad"><i class="fas fa-gamepad"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-mobile-alt"><i class="fas fa-mobile-alt"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-briefcase"><i class="fas fa-briefcase"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-palette"><i class="fas fa-palette"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-book"><i class="fas fa-book"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-music"><i class="fas fa-music"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-film"><i class="fas fa-film"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-shopping-cart"><i class="fas fa-shopping-cart"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-envelope"><i class="fas fa-envelope"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-search"><i class="fas fa-search"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-home"><i class="fas fa-home"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-star"><i class="fas fa-star"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-heart"><i class="fas fa-heart"></i></div>
+                        <div class="icon-picker-item" data-icon="fas fa-cloud"><i class="fas fa-cloud"></i></div>
+                    </div>
+                </div>
+                <div class="form-group"><label>分组名称</label><input type="text" id="group-modal-name"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary modal-close-btn">取消</button>
+                <button id="group-modal-save" class="btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="delete-confirm-modal">
+        <div class="modal-content glass-panel">
+            <h3 class="modal-header">确认删除</h3>
+            <div class="form-body"><p>你确定要删除这个快捷方式吗？此操作不可撤销。</p></div>
+            <div class="modal-actions">
+                <button class="btn-secondary modal-close-btn">取消</button>
+                <button id="confirm-card-delete-btn" class="btn-danger">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="group-delete-modal">
+        <div class="modal-content glass-panel">
+            <h3 class="modal-header">删除分组</h3>
+            <div class="form-body">
+                <p style="color: #ff6b6b; font-weight: bold;">警告：此操作将删除分组及其所有卡片！</p>
+                <p>请输入分组名称 "<span id="delete-target-name-display" style="font-weight: bold;"></span>" 以确认：</p>
+                <input type="text" id="group-delete-verify-input" placeholder="在此输入名称...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary modal-close-btn">取消</button>
+                <button id="group-delete-confirm-btn" class="btn-danger" disabled>确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu" id="context-menu">
+        <div class="menu-item" id="menu-edit-card"><i class="fas fa-edit"></i><span>编辑卡片</span></div>
+        <div class="menu-item text-danger" id="menu-delete-card"><i class="fas fa-trash"></i><span>删除卡片</span></div>
+    </div>
+
+    <div class="context-menu" id="group-context-menu">
+        <div class="menu-item" id="group-menu-add-card"><i class="fas fa-plus"></i><span>添加快捷方式</span></div>
+        <div class="menu-item" id="group-menu-edit-action"><i class="fas fa-cog"></i><span>编辑分组</span></div>
+        <div class="menu-item text-danger" id="group-menu-delete-action"><i class="fas fa-trash"></i><span>删除分组</span></div>
+    </div>
+
+    <div class="context-menu" id="global-context-menu">
+        <div id="global-menu-items"></div>
+    </div>
+
+    <!-- 壁纸选择按钮 -->
+    <button class="wallpaper-btn" id="btn-wallpaper" title="更换壁纸">
+        <i class="fas fa-tshirt"></i>
+    </button>
+
+    <!-- 壁纸选择弹窗 (与设置弹窗结构一致) -->
+    <div class="wallpaper-wrapper">
+        <div class="wallpaper-panel glass-panel" id="wallpaper-modal">
+            <div class="wallpaper-grid" id="wallpaper-grid"></div>
+        </div>
+    </div>
+
+    <script src="./js/icon-picker.js"></script>
+    <script src="./js/script.js"></script>
+</body>
+</html>

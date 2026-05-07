@@ -1,0 +1,6 @@
+.idea/
+.git/
+/bin/
+/db/
+/backup/
+/tmp/

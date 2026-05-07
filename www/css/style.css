@@ -1,0 +1,513 @@
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.3);
+    --glass-border: rgba(255, 255, 255, 0.35);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    --blur-amount: 6px;
+    --bg-blur: 0px;
+    --text-color: #ffffff;
+    --transition-speed: 0.3s;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
+body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; background-color: #000; }
+
+#app-background {
+    position: fixed; top: -10px; left: -10px; right: -10px; bottom: -10px;
+    background-size: cover; background-position: center; z-index: -2;
+    filter: blur(var(--bg-blur));
+}
+
+#app-background-fade {
+    position: fixed; top: -10px; left: -10px; right: -10px; bottom: -10px;
+    background-size: cover; background-position: center; z-index: -1;
+    filter: blur(var(--bg-blur));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-amount));
+    -webkit-backdrop-filter: blur(var(--blur-amount));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 8px;
+}
+
+.glass-text { text-shadow: 0 2px 8px rgba(0,0,0,0.4); user-select: none; }
+
+.top-bar { position: absolute; top: 20px; right: 30px; display: flex; gap: 15px; z-index: 100; }
+.icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--glass-bg); backdrop-filter: blur(var(--blur-amount));
+    border: 1px solid var(--glass-border); border-radius: 50%;
+    width: 26px; height: 26px; cursor: pointer; color: white; transition: 0.3s;
+}
+.icon-inner { font-size: 0.85rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; top: 1px; }
+.icon-btn:hover { background: rgba(255, 255, 255, 0.25); }
+
+.settings-panel {
+    position: absolute; top: 40px; right: 0; width: 300px; padding: 16px;
+    opacity: 0; visibility: hidden; transform: translateY(-10px);
+    transition: all 0.3s ease; z-index: 1000;
+}
+.settings-panel.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.settings-tabs { display: flex; border-bottom: 1px solid var(--glass-border); margin-bottom: 12px; }
+.tab-btn { flex: 1; background: none; border: none; color: white; padding: 0 10px 8px 10px; cursor: pointer; opacity: 0.6; }
+.tab-btn.active { opacity: 1; border-bottom: 2px solid white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.setting-item { margin-bottom: 12px; }
+.setting-item:last-child { margin-bottom: 0; }
+.setting-item label { display: block; margin-bottom: 6px; font-size: 0.9rem; opacity: 0.9; }
+
+input[type="text"] {
+    width: 100%; padding: 10px; background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white; outline: none;
+}
+
+/* 弹窗内的输入框使用更高的不透明度 */
+.modal-content input[type="text"] {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 右键菜单设置中的输入框 - 变矮 */
+.context-input {
+    padding: 6px 8px !important;
+    font-size: 0.85rem !important;
+}
+
+.glass-select {
+    width: 100%; padding: 10px; background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white; outline: none;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
+    padding-right: 30px; cursor: pointer;
+}
+.glass-select option { background: #333; color: white; }
+
+button.btn-primary, button.btn-secondary, button.btn-danger {
+    padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease;
+}
+button.btn-primary { background: rgba(52, 152, 219, 0.8); color: white; border: 1px solid rgba(255,255,255,0.3); }
+button.btn-primary:hover { 
+    background: rgba(52, 152, 219, 0.95); 
+    transform: translateY(-2px);
+}
+button.btn-secondary { background: rgba(255,255,255,0.25); color: white; border: 1px solid rgba(255,255,255,0.3); }
+button.btn-danger { background: rgba(231,76,60,0.8); color: white; border: 1px solid rgba(255,255,255,0.3); }
+button.btn-danger:hover { 
+    background: rgba(231,76,60,0.95); 
+    transform: translateY(-2px);
+}
+button.btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+
+button.btn-secondary:hover { 
+    background: rgba(255,255,255,0.35); 
+    transform: translateY(-2px);
+}
+
+.full-width { width: 100%; }
+.mb-10 { margin-bottom: 10px; }
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.divider { border: none; border-top: 1px solid var(--glass-border); margin: 20px 0; }
+.btn-sm.btn-sm { padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; line-height: 1.2; }
+
+
+.main-content { max-width: 1200px; margin: 0 auto; padding: 60px 20px; }
+.search-section { text-align: center; margin-bottom: 60px; }
+#main-title { margin-bottom: 40px; }
+.search-box { display: flex; align-items: center; padding: 4px 15px; width: 100%; max-width: 500px; border-radius: 35px !important; margin: 0 auto; position: relative; 
+    background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(var(--blur-amount)); -webkit-backdrop-filter: blur(var(--blur-amount)); 
+    border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+.search-engine-icon { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-right: 8px; margin-left: -5px; background: rgba(255, 255, 255, 0.1); flex-shrink: 0; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+.search-engine-icon img { width: 20px; height: 20px; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+.search-box input { flex: 1; border: none; background: transparent; padding: 8px; font-size: 1rem; color: white; outline: none; }
+.search-box input::placeholder { color: rgba(255, 255, 255, 0.3); user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+
+.group { margin-bottom: 45px; }
+.group-header { display: flex; align-items: center; margin-bottom: 18px; border-bottom: var(--group-divider-display, 1px solid rgba(255, 255, 255, 0.15)); padding-bottom: 10px; }
+.group-icon { font-size: 1.4rem; margin-right: 12px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.group-icon img { width: 24px; height: 24px; object-fit: contain; }
+.group-icon i { font-size: 1.2rem; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.group-title { font-size: 1.25rem; font-weight: 400; flex: 1; user-select: none; }
+
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; min-height: 60px; }
+.drag-mode .cards-grid { min-height: 80px; padding: 4px; }
+.nav-card { display: flex; align-items: center; padding: 6px; height: 60px; text-decoration: none; color: white; transition: 0.2s; background: rgba(255, 255, 255, 0.12); }
+.nav-card:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.22); }
+.card-icon { font-size: 1.8rem; margin-right: 6px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; user-select: none; }
+.card-icon-inner { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; line-height: 1; user-select: none; }
+.card-icon-inner img { border-radius: 3px; }
+.card-icon-inner img { width: 26px; height: 26px; object-fit: contain; display: block; }
+.card-icon-inner i { font-size: 1.5rem; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; text-align: center; }
+.card-info { flex: 1; overflow: hidden; }
+.card-title { font-size: 1.05rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; }
+.card-desc { font-size: 0.82rem; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; }
+
+/* 蒙版层 */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000; 
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; 
+    animation: none;
+    transition: opacity 0.18s ease-out;
+}
+.modal-overlay.show { 
+    opacity: 1; 
+    visibility: visible; 
+    animation: dialogFadeIn 0.18s ease-out forwards;
+}
+
+/* 弹窗动画 */
+.modal-overlay.show .modal-content { 
+    animation: dialogSlideIn 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.modal-content { 
+    width: 400px; 
+    padding: 20px; 
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+    animation: none;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    /* 使用 glass-panel 的样式，与设置弹窗保持一致 */
+}
+.modal-overlay.show .modal-content { 
+    animation: dialogSlideIn 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.modal-header { margin-bottom: 15px; font-size: 1.4rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+.form-group { margin-bottom: 8px; }
+.form-group > label { display: block; margin-bottom: 2px; font-size: 0.9rem; opacity: 0.8; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+
+/* 删除确认弹窗中的段落间距 */
+.form-body p { margin-bottom: 8px; }
+.form-body input { margin-top: 4px; }
+
+/* 开关样式 */
+.switch-form-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.switch-text {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: -4px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: background-color 0.3s ease;
+    border-radius: 24px;
+    will-change: background-color;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 11px;
+    width: 11px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    will-change: transform;
+}
+
+input:checked + .slider {
+    background-color: #3b82f6;
+}
+
+input:checked + .slider:before {
+    transform: translateX(13px);
+}
+
+.context-menu {
+    position: absolute; z-index: 3000; min-width: 140px; padding: 4px 0; white-space: nowrap;
+    border-radius: 6px;
+    /* 提高透明度 */
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    opacity: 0; visibility: hidden; 
+    transform: scale(0.98); transform-origin: top left;
+    pointer-events: none;
+}
+.context-menu.show { 
+    animation: menuFadeIn 0.12s ease-out forwards;
+    pointer-events: auto; 
+}
+
+/* 菜单淡入动画 */
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+}
+.menu-item { display: flex; align-items: center; gap: 10px; padding: 7px 14px; cursor: pointer; font-size: 0.85rem; border-radius: 3px; margin: 0 4px; }
+.menu-item:hover { background: rgba(255,255,255,0.55); }
+.menu-item-adjust span { transform: translateY(-1px); display: inline-block; }
+.menu-icon { width: 16px; text-align: center; font-size: 0.85rem; }
+.menu-divider { height: 1px; background: rgba(255,255,255,0.35); margin: 4px 8px; }
+.text-danger { color: inherit; }
+
+/* ====== 弹窗动画 ====== */
+@keyframes dialogSlideIn {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -15px, 0) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
+@keyframes dialogFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+
+
+/* ====== 拖拽模式样式 ====== */
+/* 只让卡片可拖拽，分组不可拖拽 */
+
+.draggable {
+    cursor: move !important;
+}
+
+.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+/* 拖拽经过时的虚框效果 */
+.drag-over {
+    position: relative;
+}
+
+.drag-over::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* 拖拽模式下的卡片样式 */
+.drag-mode .nav-card {
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.drag-mode .nav-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 拖拽模式指示图标 */
+.drag-mode .nav-card::before {
+    content: '☰';
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+    cursor: move;
+}
+
+/* ====== 搜索引擎选择器 ====== */
+.search-engine-selector {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 1000;
+    min-width: 120px;
+}
+
+.search-engine-selector.show {
+    display: flex;
+}
+
+.search-engine-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.search-engine-option:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.search-engine-option img {
+    width: 16px;
+    height: 16px;
+}
+
+/* ====== 壁纸选择按钮 ====== */
+.wallpaper-btn {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-amount));
+    -webkit-backdrop-filter: blur(var(--blur-amount));
+    border: 1px solid var(--glass-border);
+    color: white;
+    font-size: 0.75rem;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--glass-shadow);
+}
+
+.wallpaper-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* ====== 壁纸选择弹窗 (与设置弹窗完全一致) ====== */
+.wallpaper-wrapper {
+    position: fixed;
+    left: 20px;
+    bottom: 65px;
+    z-index: 100;
+}
+
+.wallpaper-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 350px;
+    max-width: 90vw;
+    padding: 10px 15px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.wallpaper-panel.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.wallpaper-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 15px 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.wallpaper-item {
+    position: relative;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.05s ease;
+}
+
+.wallpaper-item:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.wallpaper-item.active {
+    border-color: #3b82f6;
+    transition: border-color 0.05s ease;
+}
+
+.wallpaper-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.wallpaper-item .check-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #3b82f6;
+    font-size: 1.2rem;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+.wallpaper-item.active .check-icon {
+    display: block;
+}

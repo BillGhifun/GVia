@@ -1,0 +1,86 @@
+{
+  "bgBlur": "0",
+  "blur": "0",
+  "contextMenu": [
+    {
+      "icon": "https://www.google.com/favicon.ico",
+      "title": "Google",
+      "url": "https://www.google.com"
+    },
+    {
+      "icon": "https://github.com/favicon.ico",
+      "title": "GitHub",
+      "url": "https://github.com"
+    },
+    {
+      "icon": "",
+      "title": "新快捷方式",
+      "url": "https://"
+    }
+  ],
+  "groups": [
+    {
+      "icon": "fas fa-star",
+      "id": "g-1778130796780",
+      "links": [
+        {
+          "desc": "",
+          "icon": "http://192.168.1.180:5380/favicon.ico",
+          "id": "l-1778130839484",
+          "title": "DNS",
+          "url": "http://192.168.1.180:5380/"
+        },
+        {
+          "desc": "",
+          "icon": "http://192.168.1.2:9090/ui/favicon.svg",
+          "id": "l-1778130899084",
+          "title": "Clash",
+          "url": "http://192.168.1.180:9090/ui/"
+        }
+      ],
+      "title": "OECT"
+    },
+    {
+      "icon": "fas fa-folder",
+      "id": "g-1778130945812",
+      "links": [
+        {
+          "desc": "",
+          "icon": "https://www.google.com/s2/favicons?domain=gemini.google.com\u0026sz=64",
+          "id": "l-1778130956492",
+          "title": "Gemini",
+          "url": "https://gemini.google.com/app"
+        },
+        {
+          "desc": "",
+          "icon": "https://www.google.com/s2/favicons?domain=chat.deepseek.com\u0026sz=64",
+          "id": "l-1778132007218",
+          "title": "Deepseek",
+          "url": "https://chat.deepseek.com/"
+        }
+      ],
+      "title": "AI"
+    },
+    {
+      "icon": "fas fa-folder",
+      "id": "g-1778131168084",
+      "links": [
+        {
+          "desc": "动漫网站",
+          "icon": "https://www.google.com/s2/favicons?domain=www.agedm.io\u0026sz=64",
+          "id": "l-1778131175044",
+          "title": "AGE动漫",
+          "url": "https://www.agedm.io/"
+        }
+      ],
+      "title": "动漫"
+    }
+  ],
+  "searchEngine": "baidu",
+  "searchTitle": "Ghifun's Lib",
+  "showGroupDivider": true,
+  "showSearch": true,
+  "showTitle": true,
+  "siteTitle": "Ghifun's Lib",
+  "wallpaper": "wallpaper/012.jpg"
+}
