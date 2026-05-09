@@ -5,6 +5,101 @@ let isDragMode = false; // 拖拽模式标志
 let draggedElement = null; // 当前拖拽的元素
 
 // ====== 0. 工具函数 ======
+// 图标缓存配置
+const ICON_CACHE_PREFIX = 'icon_cache_';
+const ICON_CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7天过期
+
+// 从缓存获取图标URL
+function getCachedIconUrl(hostname) {
+    try {
+        const cacheKey = ICON_CACHE_PREFIX + hostname;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const { url, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < ICON_CACHE_EXPIRE) {
+                return url;
+            }
+        }
+    } catch (e) {
+        // 忽略解析错误
+    }
+    return null;
+}
+
+// 保存图标URL到缓存
+function saveIconCache(hostname, url) {
+    try {
+        const cacheKey = ICON_CACHE_PREFIX + hostname;
+        localStorage.setItem(cacheKey, JSON.stringify({
+            url: url,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        // 存储空间不足时清理旧缓存
+        clearOldIconCache();
+        try {
+            const cacheKey = ICON_CACHE_PREFIX + hostname;
+            localStorage.setItem(cacheKey, JSON.stringify({
+                url: url,
+                timestamp: Date.now()
+            }));
+        } catch (e2) {
+            // 仍失败则放弃
+        }
+    }
+}
+
+// 清理过期缓存（当存储空间不足时）
+function clearOldIconCache() {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(ICON_CACHE_PREFIX)) {
+            try {
+                const cached = localStorage.getItem(key);
+                const { timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp >= ICON_CACHE_EXPIRE) {
+                    keysToRemove.push(key);
+                }
+            } catch (e) {
+                keysToRemove.push(key);
+            }
+        }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
+// 动态获取 favicon URL
+function getAutoFavicon(url) {
+    if (!url || url === '#') return null;
+    try {
+        const urlObj = new URL(url);
+        const isLocal = urlObj.hostname === 'localhost' || 
+                       urlObj.hostname === '127.0.0.1' || 
+                       urlObj.hostname.startsWith('192.168.') || 
+                       urlObj.hostname.startsWith('10.') || 
+                       urlObj.hostname.endsWith('.local');
+        
+        if (isLocal) {
+            return urlObj.origin + '/favicon.ico';
+        }
+        
+        // 尝试从缓存获取
+        const cachedUrl = getCachedIconUrl(urlObj.hostname);
+        if (cachedUrl) {
+            return cachedUrl;
+        }
+        
+        // 生成新URL并缓存
+        const faviconApi = appConfig.faviconApi || DEFAULT_CONFIG.faviconApi;
+        const newUrl = faviconApi.replace('{link}', urlObj.hostname);
+        saveIconCache(urlObj.hostname, newUrl);
+        return newUrl;
+    } catch (e) {
+        return null;
+    }
+}
+
 function renderIcon(iconValue, defaultIcon = DEFAULT_ICON) {
     if (!iconValue) {
         return `<img src="${defaultIcon}" alt="">`;
@@ -34,8 +129,9 @@ function renderIcon(iconValue, defaultIcon = DEFAULT_ICON) {
 // ====== 1. 默认配置与全局菜单配置 ======
 const DEFAULT_CONFIG = {
     wallpaper: '/wallpaper/001.jpg',
-    blur: 10, bgBlur: 0, showSearch: true, showTitle: true, searchTitle: '我的导航', showGroupDivider: true,
+    blur: 10, bgBlur: 0, cardBorderOpacity: 0, searchBorderOpacity: 0, showSearch: true, showTitle: true, searchTitle: '我的导航', showGroupDivider: true, showAuthorButton: true,
     siteTitle: '个人导航', siteIcon: '', 
+    faviconApi: 'https://www.google.com/s2/favicons?domain={link}&sz=64',
     searchEngine: 'google',
     searchEngines: {
         google: {
@@ -66,8 +162,9 @@ const DEFAULT_CONFIG = {
 };
 
 let appConfig = JSON.parse(localStorage.getItem('nav_config')) || DEFAULT_CONFIG;
-// 确保 contextMenu 字段存在
+// 确保新增字段存在
 if (!appConfig.contextMenu) appConfig.contextMenu = [];
+if (appConfig.cardBorderOpacity === undefined) appConfig.cardBorderOpacity = 50;
 let targetObject = null; // 存储当前右键点击的对象信息
 let currentEditingGroupId = null;
 let currentEditingCardId = null;
@@ -120,8 +217,12 @@ function applyAppearance() {
     
     root.style.setProperty('--blur-amount', `${appConfig.blur}px`);
     root.style.setProperty('--bg-blur', `${appConfig.bgBlur}px`);
+    root.style.setProperty('--card-border-opacity', `${appConfig.cardBorderOpacity / 100}`);
+    root.style.setProperty('--search-border-opacity', (appConfig.searchBorderOpacity || 0) / 100);
     document.getElementById('blur-value-display').innerText = `${appConfig.blur}px`;
     document.getElementById('bg-blur-display').innerText = `${appConfig.bgBlur}px`;
+    document.getElementById('card-border-display').innerText = `${appConfig.cardBorderOpacity}%`;
+    document.getElementById('search-border-display').innerText = `${appConfig.searchBorderOpacity || 0}%`;
     document.getElementById('main-title').innerText = appConfig.searchTitle;
     document.getElementById('main-title').style.display = appConfig.showTitle ? 'block' : 'none';
     if (appConfig.showSearch) {
@@ -144,6 +245,12 @@ function applyAppearance() {
     
     // 更新网站图标
     updateFavicon(appConfig.siteIcon);
+    
+    // 作者按钮显示控制
+    const authorBtn = document.getElementById('btn-author');
+    if (authorBtn) {
+        authorBtn.style.display = appConfig.showAuthorButton !== false ? 'flex' : 'none';
+    }
 }
 
 function renderGroups() {
@@ -176,8 +283,10 @@ function renderGroups() {
             card.dataset.id = link.id; // 添加data-id属性
             if (isDragMode) card.classList.add('draggable');
             
-            // 图标处理：使用通用函数渲染图标
-            const iconHtml = `<div class="card-icon-inner">${renderIcon(link.icon, 'fas fa-bookmark')}</div>`;
+            // 图标处理：autoFetchIcon=true 则自动获取，否则 icon 有内容用自定义，为空自动获取
+            const isAutoIcon = link.autoFetchIcon === true || !link.icon;
+            const iconValue = isAutoIcon ? (getAutoFavicon(link.url) || 'fas fa-bookmark') : link.icon;
+            const iconHtml = `<div class="card-icon-inner">${renderIcon(iconValue, 'fas fa-bookmark')}</div>`;
             
             card.innerHTML = `<div class="card-icon">${iconHtml}</div><div class="card-info"><div class="card-title">${link.title}</div>${link.desc ? '<div class="card-desc">' + link.desc + '</div>' : ''}</div>`;
             
@@ -217,8 +326,8 @@ function openCardModal(groupId, cardId = null) {
     
     if (isEdit) {
         const link = appConfig.groups.find(g => g.id === groupId).links.find(l => l.id === cardId);
-        // 判断是否为自动获取的图标（只有 Google favicon 服务 URL 才算自动获取）
-        const isAutoIcon = link.icon && link.icon.includes('google.com/s2/favicons');
+        // autoFetchIcon=true 则自动获取，否则 icon 有内容用自定义，为空自动获取
+        const isAutoIcon = link.autoFetchIcon === true || !link.icon;
         autoCheckbox.checked = isAutoIcon;
         iconWrapper.style.display = isAutoIcon ? 'none' : 'flex';
         // 如果自定义图标，显示图标链接/路径
@@ -231,7 +340,7 @@ function openCardModal(groupId, cardId = null) {
     } else {
         autoCheckbox.checked = true;
         iconWrapper.style.display = 'none';
-        iconInput.value = DEFAULT_ICON;
+        iconInput.value = '';
         // 清空图标预览
         iconPreview.innerHTML = '';
         document.getElementById('modal-card-title').value = '';
@@ -258,45 +367,21 @@ function openCardModal(groupId, cardId = null) {
 document.getElementById('modal-btn-save').onclick = () => {
     const group = appConfig.groups.find(g => g.id === currentEditingGroupId);
     const isAutoIcon = document.getElementById('modal-icon-auto').checked;
+    const url = document.getElementById('modal-url').value || '#';
     let icon = DEFAULT_ICON;
     
-    if (isAutoIcon) {
-        // 自动获取图标：尝试从 URL 获取 favicon
-        const url = document.getElementById('modal-url').value || '#';
-        if (url && url !== '#') {
-            try {
-                const urlObj = new URL(url);
-                
-                // 判断是否为本地连接
-                const isLocal = urlObj.hostname === 'localhost' || 
-                               urlObj.hostname === '127.0.0.1' || 
-                               urlObj.hostname.startsWith('192.168.') || 
-                               urlObj.hostname.startsWith('10.') || 
-                               urlObj.hostname.endsWith('.local');
-                
-                if (isLocal) {
-                    // 本地连接：拼接 favicon.ico
-                    icon = urlObj.origin + '/favicon.ico';
-                } else {
-                    // 外部连接：使用 Google favicon 服务
-                    icon = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
-                }
-            } catch (e) {
-                icon = DEFAULT_ICON; // 如果无法解析 URL，使用默认图标
-            }
-        } else {
-            icon = DEFAULT_ICON;
-        }
-    } else {
-        // 使用自定义图标，并规范化URL
+    if (!isAutoIcon) {
+        // 非自动获取：使用自定义图标
         icon = normalizeIconUrl(document.getElementById('modal-icon').value || DEFAULT_ICON);
     }
+    // 自动获取时 icon 为空，渲染时动态生成
     
     const data = {
+        autoFetchIcon: isAutoIcon,
         icon: icon,
         title: document.getElementById('modal-card-title').value || '未命名',
         desc: document.getElementById('modal-desc').value,
-        url: document.getElementById('modal-url').value || '#'
+        url: url
     };
     if (currentEditingCardId) {
         const idx = group.links.findIndex(l => l.id === currentEditingCardId);
@@ -466,19 +551,6 @@ document.oncontextmenu = (e) => {
     showMenu(document.getElementById('global-context-menu'), e.pageX, e.pageY);
 };
 
-// 辅助函数：在光标位置插入文本
-function insertTextAtCursor(inputElement, text) {
-    const start = inputElement.selectionStart;
-    const end = inputElement.selectionEnd;
-    
-    const newValue = inputElement.value.substring(0, start) + text + inputElement.value.substring(end);
-    inputElement.value = newValue;
-    const newCursorPos = start + text.length;
-    inputElement.setSelectionRange(newCursorPos, newCursorPos);
-    // 触发input事件
-    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
 document.getElementById('menu-edit-card').onclick = () => openCardModal(targetObject.groupId, targetObject.id);
 document.getElementById('menu-delete-card').onclick = () => { hideAllMenus(); deleteCardModal.classList.add('show'); };
 document.getElementById('group-menu-add-card').onclick = () => openCardModal(targetObject.groupId);
@@ -531,7 +603,7 @@ document.getElementById('input-import').onchange = (e) => {
 };
 
 // 各种监听
-// 磨砂值调整：滑动时实时更新视觉效果，松开时才保存配置
+// 磨砂值调整：滑动时实时更新视觉效果
 const rootElement = document.documentElement;
 
 document.getElementById('slider-blur').oninput = (e) => {
@@ -539,21 +611,55 @@ document.getElementById('slider-blur').oninput = (e) => {
     rootElement.style.setProperty('--blur-amount', `${appConfig.blur}px`);
     document.getElementById('blur-value-display').innerText = `${appConfig.blur}px`;
 };
-document.getElementById('slider-blur').onchange = () => { saveConfig(); };
 
 document.getElementById('slider-bg-blur').oninput = (e) => {
     appConfig.bgBlur = e.target.value;
     rootElement.style.setProperty('--bg-blur', `${appConfig.bgBlur}px`);
     document.getElementById('bg-blur-display').innerText = `${appConfig.bgBlur}px`;
 };
-document.getElementById('slider-bg-blur').onchange = () => { saveConfig(); };
-document.getElementById('input-wallpaper').onchange = (e) => { appConfig.wallpaper = e.target.value; saveConfig(); };
-document.getElementById('toggle-title').onchange = (e) => { appConfig.showTitle = e.target.checked; saveConfig(); };
-document.getElementById('toggle-search').onchange = (e) => { appConfig.showSearch = e.target.checked; saveConfig(); };
-document.getElementById('toggle-group-divider').onchange = (e) => { appConfig.showGroupDivider = e.target.checked; saveConfig(); };
-document.getElementById('input-title').oninput = (e) => { appConfig.searchTitle = e.target.value; saveConfig(); };
-document.getElementById('input-site-title').oninput = (e) => { appConfig.siteTitle = e.target.value; saveConfig(); };
-document.getElementById('input-site-icon').oninput = (e) => { appConfig.siteIcon = e.target.value; saveConfig(); };
+
+document.getElementById('slider-card-border').oninput = (e) => {
+    appConfig.cardBorderOpacity = e.target.value;
+    rootElement.style.setProperty('--card-border-opacity', `${appConfig.cardBorderOpacity / 100}`);
+    document.getElementById('card-border-display').innerText = `${appConfig.cardBorderOpacity}%`;
+};
+
+document.getElementById('slider-search-border').oninput = (e) => {
+    appConfig.searchBorderOpacity = e.target.value;
+    rootElement.style.setProperty('--search-border-opacity', appConfig.searchBorderOpacity / 100);
+    document.getElementById('search-border-display').innerText = `${appConfig.searchBorderOpacity}%`;
+};
+
+// 外观页面保存按钮
+document.getElementById('btn-save-appearance').onclick = () => {
+    appConfig.wallpaper = document.getElementById('input-wallpaper').value;
+    appConfig.blur = document.getElementById('slider-blur').value;
+    appConfig.bgBlur = document.getElementById('slider-bg-blur').value;
+    appConfig.cardBorderOpacity = document.getElementById('slider-card-border').value;
+    appConfig.searchBorderOpacity = document.getElementById('slider-search-border').value;
+    saveConfig();
+    settingsPanel.classList.remove('show');
+};
+
+// 保存设置按钮
+document.getElementById('btn-save-settings').onclick = () => {
+    // 从输入框读取值并保存
+    appConfig.wallpaper = document.getElementById('input-wallpaper').value;
+    appConfig.blur = document.getElementById('slider-blur').value;
+    appConfig.bgBlur = document.getElementById('slider-bg-blur').value;
+    appConfig.cardBorderOpacity = document.getElementById('slider-card-border').value;
+    appConfig.showTitle = document.getElementById('toggle-title').checked;
+    appConfig.showSearch = document.getElementById('toggle-search').checked;
+    appConfig.showGroupDivider = document.getElementById('toggle-group-divider').checked;
+    appConfig.showAuthorButton = document.getElementById('toggle-author-btn').checked;
+    appConfig.searchTitle = document.getElementById('input-title').value;
+    appConfig.siteTitle = document.getElementById('input-site-title').value;
+    appConfig.siteIcon = document.getElementById('input-site-icon').value;
+    appConfig.faviconApi = document.getElementById('input-favicon-api').value;
+    
+    saveConfig();
+    settingsPanel.classList.remove('show');
+};
 
 // ====== 右键菜单设置 ======
 function renderContextMenuSettings() {
@@ -633,9 +739,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 document.addEventListener('click', (e) => {
     hideAllMenus();
-    // 设置弹窗：点击空白处关闭
-    if (!e.target.closest('.settings-wrapper')) settingsPanel.classList.remove('show');
-    // 壁纸弹窗：点击空白处关闭 (与设置弹窗逻辑一致)
+    // 壁纸弹窗：点击空白处关闭
     if (!e.target.closest('.wallpaper-wrapper')) document.getElementById('wallpaper-modal').classList.remove('show');
 });
 
@@ -855,6 +959,10 @@ async function initConfig() {
         }
     }
     
+    // 确保新增字段存在
+    if (appConfig.cardBorderOpacity === undefined) appConfig.cardBorderOpacity = 0;
+    if (appConfig.searchBorderOpacity === undefined) appConfig.searchBorderOpacity = 0;
+    
     // 应用配置
     applyAppearance(); 
     renderGroups();
@@ -863,12 +971,16 @@ async function initConfig() {
     document.getElementById('input-wallpaper').value = appConfig.wallpaper;
     document.getElementById('slider-blur').value = appConfig.blur;
     document.getElementById('slider-bg-blur').value = appConfig.bgBlur;
+    document.getElementById('slider-card-border').value = appConfig.cardBorderOpacity || 0;
+    document.getElementById('slider-search-border').value = appConfig.searchBorderOpacity || 0;
     document.getElementById('toggle-title').checked = appConfig.showTitle !== false;
     document.getElementById('toggle-search').checked = appConfig.showSearch;
     document.getElementById('toggle-group-divider').checked = appConfig.showGroupDivider !== false;
+    document.getElementById('toggle-author-btn').checked = appConfig.showAuthorButton !== false;
     document.getElementById('input-title').value = appConfig.searchTitle;
     document.getElementById('input-site-title').value = appConfig.siteTitle || '';
     document.getElementById('input-site-icon').value = appConfig.siteIcon || '';
+    document.getElementById('input-favicon-api').value = appConfig.faviconApi || DEFAULT_CONFIG.faviconApi;
     
     // 启动 SSE 连接
     connectSSE();

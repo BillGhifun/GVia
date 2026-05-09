@@ -21,7 +21,8 @@
                 <div class="settings-tabs">
                     <button class="tab-btn active" data-target="tab-appearance">外观</button>
                     <button class="tab-btn" data-target="tab-general">通用</button>
-                    <button class="tab-btn" data-target="tab-contextmenu">右键菜单</button>
+                    <button class="tab-btn" data-target="tab-contextmenu">右键</button>
+                    <button class="tab-btn" data-target="tab-backup">备份</button>
                 </div>
 
                 <div class="tab-content active" id="tab-appearance">
@@ -37,6 +38,15 @@
                         <label>背景壁纸模糊: <span id="bg-blur-display">0px</span></label>
                         <input type="range" id="slider-bg-blur" min="0" max="50" value="0">
                     </div>
+                    <div class="setting-item">
+                        <label>卡片边框透明度: <span id="card-border-display">0%</span></label>
+                        <input type="range" id="slider-card-border" min="0" max="100" value="0">
+                    </div>
+                    <div class="setting-item">
+                        <label>搜索框边框透明度: <span id="search-border-display">0%</span></label>
+                        <input type="range" id="slider-search-border" min="0" max="100" value="0">
+                    </div>
+                    <button id="btn-save-appearance" class="btn-primary full-width">保存设置</button>
                 </div>
 
                 <div class="tab-content" id="tab-general">
@@ -48,6 +58,12 @@
                         <label>网站图标 (URL 或 Font Awesome)</label>
                         <input type="text" id="input-site-icon" placeholder="例如：https://example.com/favicon.ico 或 fas fa-home">
                         <small style="opacity:0.7; font-size:0.8rem; margin-top:4px; display:block;">URL链接将作为浏览器图标，Font Awesome将显示在页面标题旁</small>
+                    </div>
+                    <hr class="divider">
+                    <div class="setting-item">
+                        <label>Favicon API</label>
+                        <input type="text" id="input-favicon-api" placeholder="例如：https://www.google.com/s2/favicons?domain={link}&sz=64">
+                        <small style="opacity:0.7; font-size:0.8rem; margin-top:4px; display:block;">使用 {link} 作为网站链接占位符，例如：https://www.google.com/s2/favicons?domain={link}&sz=64</small>
                     </div>
                     <hr class="divider">
                     <div class="setting-item">
@@ -75,11 +91,22 @@
                         </label>
                         <span class="switch-text">分组分割线显示</span>
                     </div>
+                    <div class="setting-item switch-form-group">
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-author-btn" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-text">作者按钮显示</span>
+                    </div>
                     <hr class="divider">
+                    <button id="btn-save-settings" class="btn-primary full-width">保存设置</button>
+                </div>
+
+                <div class="tab-content" id="tab-backup">
                     <div class="setting-item">
                         <label>数据备份与迁移</label>
-                        <button id="btn-export" class="btn-primary full-width mb-10">导出配置 (JSON)</button>
-                        <button id="btn-import-trigger" class="btn-secondary full-width">导入配置 (JSON)</button>
+                        <button id="btn-export" class="btn-primary full-width mb-10">导出配置</button>
+                        <button id="btn-import-trigger" class="btn-secondary full-width">导入配置</button>
                         <input type="file" id="input-import" accept=".json" style="display: none;">
                     </div>
                 </div>
@@ -239,6 +266,11 @@
     <button class="wallpaper-btn" id="btn-wallpaper" title="更换壁纸">
         <i class="fas fa-tshirt"></i>
     </button>
+
+    <!-- 作者 GitHub 按钮 -->
+    <a class="wallpaper-btn" id="btn-author" href="https://ghifun.github.io/" target="_blank" title="关于作者">
+        <i class="fab fa-github"></i>
+    </a>
 
     <!-- 壁纸选择弹窗 (与设置弹窗结构一致) -->
     <div class="wallpaper-wrapper">

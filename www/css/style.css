@@ -4,9 +4,15 @@
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
     --blur-amount: 6px;
     --bg-blur: 0px;
+    --card-border-opacity: 0.5;
+    --search-border-opacity: 0.35;
     --text-color: #ffffff;
     --transition-speed: 0.3s;
 }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
 body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; background-color: #000; }
@@ -29,14 +35,14 @@ body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; backgrou
     background: var(--glass-bg);
     backdrop-filter: blur(var(--blur-amount));
     -webkit-backdrop-filter: blur(var(--blur-amount));
-    border: 1px solid var(--glass-border);
+    border: 1px solid rgba(255, 255, 255, var(--card-border-opacity));
     box-shadow: var(--glass-shadow);
     border-radius: 8px;
 }
 
 .glass-text { text-shadow: 0 2px 8px rgba(0,0,0,0.4); user-select: none; }
 
-.top-bar { position: absolute; top: 20px; right: 30px; display: flex; gap: 15px; z-index: 100; }
+.top-bar { position: fixed; top: 20px; right: 30px; display: flex; gap: 15px; z-index: 100; }
 .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--glass-bg); backdrop-filter: blur(var(--blur-amount));
@@ -47,7 +53,7 @@ body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; backgrou
 .icon-btn:hover { background: rgba(255, 255, 255, 0.25); }
 
 .settings-panel {
-    position: absolute; top: 40px; right: 0; width: 300px; padding: 16px;
+    position: fixed; top: 60px; right: 20px; width: 300px; padding: 16px;
     opacity: 0; visibility: hidden; transform: translateY(-10px);
     transition: all 0.3s ease; z-index: 1000;
 }
@@ -124,7 +130,7 @@ button.btn-secondary:hover {
 #main-title { margin-bottom: 40px; }
 .search-box { display: flex; align-items: center; padding: 4px 15px; width: 100%; max-width: 500px; border-radius: 35px !important; margin: 0 auto; position: relative; 
     background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(var(--blur-amount)); -webkit-backdrop-filter: blur(var(--blur-amount)); 
-    border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+    border: 1px solid rgba(255, 255, 255, var(--search-border-opacity)); box-shadow: var(--glass-shadow); }
 .search-engine-icon { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-right: 8px; margin-left: -5px; background: rgba(255, 255, 255, 0.1); flex-shrink: 0; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
 .search-engine-icon img { width: 20px; height: 20px; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
 .search-box input { flex: 1; border: none; background: transparent; padding: 8px; font-size: 1rem; color: white; outline: none; }
@@ -429,10 +435,24 @@ input:checked + .slider:before {
     justify-content: center;
     transition: all 0.3s ease;
     box-shadow: var(--glass-shadow);
+    text-decoration: none;
 }
 
 .wallpaper-btn:hover {
     background: rgba(255, 255, 255, 0.25);
+}
+
+#btn-wallpaper {
+    bottom: 20px;
+}
+
+#btn-author {
+    left: 56px;
+    bottom: 20px;
+}
+
+#btn-author i {
+    font-size: 1.1rem;
 }
 
 /* ====== 壁纸选择弹窗 (与设置弹窗完全一致) ====== */
