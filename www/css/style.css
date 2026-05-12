@@ -40,6 +40,21 @@ body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; backgrou
     border-radius: 8px;
 }
 
+/* 固定磨砂度的面板，不受用户设置的磨砂度影响 */
+.glass-panel-fixed {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+}
+
+/* 隐藏元素（登录相关） */
+.hidden {
+    display: none !important;
+}
+
 .glass-text { text-shadow: 0 2px 8px rgba(0,0,0,0.4); user-select: none; }
 
 .top-bar { position: fixed; top: 20px; right: 30px; display: flex; gap: 15px; z-index: 100; }
@@ -51,6 +66,7 @@ body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; backgrou
 }
 .icon-inner { font-size: 0.85rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative; top: 1px; }
 .icon-btn:hover { background: rgba(255, 255, 255, 0.25); }
+.settings-wrapper { display: flex; gap: 15px; align-items: center; }
 
 .settings-panel {
     position: fixed; top: 60px; right: 20px; width: 300px; padding: 16px;
@@ -69,13 +85,13 @@ body { color: var(--text-color); overflow-x: hidden; min-height: 100vh; backgrou
 .setting-item:last-child { margin-bottom: 0; }
 .setting-item label { display: block; margin-bottom: 6px; font-size: 0.9rem; opacity: 0.9; }
 
-input[type="text"] {
+input[type="text"], input[type="password"] {
     width: 100%; padding: 10px; background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white; outline: none;
 }
 
 /* 弹窗内的输入框使用更高的不透明度 */
-.modal-content input[type="text"] {
+.modal-content input[type="text"], .modal-content input[type="password"] {
     background: rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
@@ -443,12 +459,18 @@ input:checked + .slider:before {
 }
 
 #btn-wallpaper {
+    left: 20px;
     bottom: 20px;
 }
 
 #btn-author {
     left: 56px;
     bottom: 20px;
+    transition: left 0.3s ease;
+}
+
+#btn-author:not(.logged-in) {
+    left: 20px;
 }
 
 #btn-author i {

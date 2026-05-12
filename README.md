@@ -8,6 +8,7 @@
 
 ## 功能特性
 
+- 🔐 **用户认证系统** - 支持多用户管理、登录/登出、密码修改
 - 📚 **链接分组管理** - 支持将书签按分组管理，自定义图标和描述
 - 🔍 **搜索引擎集成** - 支持 Google、Bing、百度等多种搜索引擎自由切换
 - 🎨 **自定义壁纸** - 支持设置背景壁纸，内置 15 张精美壁纸
@@ -17,13 +18,13 @@
 - 🔗 **右键快捷菜单** - 支持自定义右键菜单快捷方式
 - ✏️ **拖拽排序** - 支持拖拽调整卡片和分组顺序
 - 🔄 **实时同步** - 多端配置自动同步更新
+- 👥 **权限分离** - 未登录用户只读模式，已登录用户可编辑
 
 ## 项目结构
 
 ```
 GVia/
 ├── main.go              # 主程序入口
-├── config.json          # 配置文件
 ├── go.mod               # Go 模块依赖
 ├── Dockerfile           # Docker 构建文件
 ├── docker-compose.yml   # Docker Compose 编排文件
@@ -31,6 +32,9 @@ GVia/
 │   ├── GVia_amd64      # AMD64 架构
 │   ├── GVia_arm64      # ARM64 架构
 │   └── GVia_arm        # ARM 架构
+├── config/              # 配置目录（首次运行自动生成）
+│   ├── config.json      # 导航配置文件
+│   └── auth.json        # 用户认证配置
 ├── www/                 # 前端静态资源
 │   ├── index.html       # 主页面
 │   ├── css/             # 样式文件
@@ -53,6 +57,12 @@ cd gvia
 # 运行（默认端口 8080）
 go run main.go
 ```
+
+> 首次运行会自动生成 `config/` 目录，包含：
+> - `config.json` - 默认导航配置
+> - `auth.json` - 默认认证配置（admin / admin123）
+>
+> 运行后访问 http://localhost:8080 ，点击右上角锁图标登录即可开始使用。
 
 ### 方式二：使用预编译二进制
 
@@ -86,7 +96,31 @@ docker build -t gvia . && docker stop gvia || true && docker rm gvia || true && 
 
 ## 配置说明
 
-配置文件 `config.json` 支持以下选项：
+### 认证配置（auth.json）
+
+> ⚠️ **重要**：首次启动程序时会**自动生成** `config/auth.json`，默认账号密码如下：
+>
+> | 用户名 | 密码 |
+> |--------|------|
+> | `admin` | `admin123` |
+>
+> **请务必在首次登录后修改默认密码！**
+
+配置文件结构：
+```json
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "your_password"
+    }
+  ]
+}
+```
+
+### 导航配置（config.json）
+
+配置文件支持以下选项：
 
 | 配置项 | 类型 | 说明 |
 |--------|------|------|
@@ -148,50 +182,86 @@ docker build -t gvia . && docker stop gvia || true && docker rm gvia || true && 
 
 ## API 接口
 
+### 认证接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/login` | POST | 用户登录（返回 session） |
+| `/api/logout` | POST | 用户登出（清除 session） |
+| `/api/check-session` | GET | 检查登录状态 |
+| `/api/password` | POST | 修改密码（需登录） |
+| `/api/users` | GET | 获取用户列表（需登录） |
+| `/api/users` | POST | 添加用户（需登录） |
+
+### 配置接口
+
 | 接口 | 方法 | 说明 |
 |------|------|------|
 | `/api/config` | GET | 获取当前配置 |
-| `/api/config` | POST | 保存配置（JSON 格式） |
+| `/api/config` | POST | 保存配置（JSON 格式，需登录） |
 | `/events` | GET | SSE 实时推送配置更新 |
 | `/` | GET | 首页 |
+
+### 权限说明
+
+- **未登录用户**：只读模式，可查看页面和配置，无法修改
+- **已登录用户**：完整权限，可编辑配置、管理用户等
 
 ### API 使用示例
 
 ```bash
-# 获取配置
+# 登录获取 session
+curl -X POST http://localhost:8080/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+
+# 检查登录状态
+curl http://localhost:8080/api/check-session -b "session_id=xxx"
+
+# 获取配置（无需登录）
 curl http://localhost:8080/api/config
 
-# 保存配置
+# 保存配置（需要先登录）
 curl -X POST http://localhost:8080/api/config \
   -H "Content-Type: application/json" \
+  -H "Cookie: session_id=xxx" \
   -d '{"siteTitle":"我的导航","wallpaper":"/wallpaper/005.jpg"}'
+
+# 登出
+curl -X POST http://localhost:8080/api/logout -b "session_id=xxx"
 ```
 
 ## 界面设置
 
 系统支持在页面右上角设置按钮中直接调整以下选项：
 
-- **外观设置**
+- **外观设置**（登录后可用）
   - 壁纸链接（支持本地路径或 URL）
   - 磨砂模糊度
   - 背景壁纸模糊度
   - 卡片边框透明度
   - 搜索框边框透明度
 
-- **通用设置**
+- **通用设置**（登录后可用）
   - 网站标题 / 图标
   - Favicon API
   - 主标题名称
   - 显示/隐藏标题、搜索栏、分组分割线、作者按钮
 
+- **账户管理**（登录后可用）
+  - 修改密码
+  - 添加/管理用户
+
 - **右键菜单**
   - 自定义右键快捷方式
   - 添加/删除分割线
+  - 未登录时仅显示快捷方式、刷新、全屏
 
 ## 技术栈
 
-- **后端**: Go 1.21 + [Echo v4](https://echo.labstack.com/)
+- **后端**: Go + [Echo v4](https://echo.labstack.com/)
 - **前端**: 原生 HTML/CSS/JavaScript
+- **认证**: Cookie-based Session（服务端内存存储，7天过期）
 - **图标**: Font Awesome 6
 - **实时通信**: Server-Sent Events (SSE)
 - **容器化**: Docker + Docker Compose

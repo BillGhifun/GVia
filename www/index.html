@@ -14,15 +14,21 @@
     <div id="app-background-fade"></div>
 
     <div class="top-bar">
-        <button class="icon-btn" id="btn-edit-mode" title="编辑模式"><span class="icon-inner fas fa-edit"></span></button>
+        <!-- 未登录时显示登录按钮 -->
+        <button class="icon-btn" id="btn-login" title="登录"><span class="icon-inner fas fa-lock"></span></button>
+        <!-- 登录后显示的工具按钮 -->
+        <button class="icon-btn hidden" id="btn-edit-mode" title="编辑模式"><span class="icon-inner fas fa-edit"></span></button>
         <div class="settings-wrapper">
-            <button class="icon-btn" id="btn-settings" title="设置"><span class="icon-inner fas fa-cog"></span></button>
-            <div class="settings-panel glass-panel" id="settings-panel">
+            <button class="icon-btn hidden" id="btn-settings" title="设置"><span class="icon-inner fas fa-cog"></span></button>
+            <!-- 登录后显示的登出按钮 -->
+            <button class="icon-btn hidden" id="btn-logout" title="登出"><span class="icon-inner fas fa-sign-out-alt"></span></button>
+            <div class="settings-panel glass-panel-fixed" id="settings-panel">
                 <div class="settings-tabs">
                     <button class="tab-btn active" data-target="tab-appearance">外观</button>
                     <button class="tab-btn" data-target="tab-general">通用</button>
                     <button class="tab-btn" data-target="tab-contextmenu">右键</button>
                     <button class="tab-btn" data-target="tab-backup">备份</button>
+                    <button class="tab-btn" data-target="tab-account">账户</button>
                 </div>
 
                 <div class="tab-content active" id="tab-appearance">
@@ -120,6 +126,53 @@
                         <button id="btn-add-divider" class="btn-secondary full-width mt-5">添加分割线</button>
                     </div>
                 </div>
+
+                <div class="tab-content" id="tab-account">
+                    <div class="setting-item">
+                        <label>修改密码</label>
+                        <input type="password" id="old-password" placeholder="原密码" autocomplete="new-password">
+                        <input type="password" id="new-password" placeholder="新密码" style="margin-top:8px;" autocomplete="new-password">
+                        <button id="btn-change-password" class="btn-primary full-width mt-10">确认修改</button>
+                    </div>
+                    <hr class="divider">
+                    <div class="setting-item">
+                        <label>用户管理</label>
+                        <div id="user-list"></div>
+                        <button id="btn-add-user" class="btn-primary full-width mt-10">添加用户</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-content glass-panel-fixed">
+            <h3 class="modal-header">登录</h3>
+            <div class="form-body">
+                <div class="form-group"><label>用户名</label><input type="text" id="login-username" autocomplete="username"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="login-password" autocomplete="current-password"></div>
+                <p id="login-error" style="color:#ff6b6b; font-size:0.85rem; margin-top:8px; display:none;"></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary modal-close-btn">取消</button>
+                <button id="btn-login-submit" class="btn-primary">登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户弹窗 -->
+    <div class="modal-overlay" id="add-user-modal">
+        <div class="modal-content glass-panel-fixed">
+            <h3 class="modal-header">添加用户</h3>
+            <div class="form-body">
+                <div class="form-group"><label>用户名</label><input type="text" id="new-username" autocomplete="new-username"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="new-user-password" autocomplete="new-password"></div>
+                <p id="add-user-error" style="color:#ff6b6b; font-size:0.85rem; margin-top:8px; display:none;"></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary modal-close-btn">取消</button>
+                <button id="btn-add-user-submit" class="btn-primary">添加</button>
             </div>
         </div>
     </div>
@@ -154,7 +207,7 @@
     </main>
 
     <div class="modal-overlay" id="card-modal">
-        <div class="modal-content glass-panel">
+        <div class="modal-content glass-panel-fixed">
             <h3 id="modal-title" class="modal-header">编辑快捷方式</h3>
             <div class="form-body">
                 <div class="form-group switch-form-group">
@@ -182,7 +235,7 @@
     </div>
 
     <div class="modal-overlay" id="group-modal">
-        <div class="modal-content glass-panel">
+        <div class="modal-content glass-panel-fixed">
             <h3 id="group-modal-title" class="modal-header">编辑分组</h3>
             <div class="form-body">
                 <div class="form-group">
@@ -222,7 +275,7 @@
     </div>
 
     <div class="modal-overlay" id="delete-confirm-modal">
-        <div class="modal-content glass-panel">
+        <div class="modal-content glass-panel-fixed">
             <h3 class="modal-header">确认删除</h3>
             <div class="form-body"><p>你确定要删除这个快捷方式吗？此操作不可撤销。</p></div>
             <div class="modal-actions">
@@ -233,7 +286,7 @@
     </div>
 
     <div class="modal-overlay" id="group-delete-modal">
-        <div class="modal-content glass-panel">
+        <div class="modal-content glass-panel-fixed">
             <h3 class="modal-header">删除分组</h3>
             <div class="form-body">
                 <p style="color: #ff6b6b; font-weight: bold;">警告：此操作将删除分组及其所有卡片！</p>
@@ -262,8 +315,8 @@
         <div id="global-menu-items"></div>
     </div>
 
-    <!-- 壁纸选择按钮 -->
-    <button class="wallpaper-btn" id="btn-wallpaper" title="更换壁纸">
+    <!-- 壁纸选择按钮（登录后显示） -->
+    <button class="wallpaper-btn hidden" id="btn-wallpaper" title="更换壁纸">
         <i class="fas fa-tshirt"></i>
     </button>
 
@@ -274,7 +327,7 @@
 
     <!-- 壁纸选择弹窗 (与设置弹窗结构一致) -->
     <div class="wallpaper-wrapper">
-        <div class="wallpaper-panel glass-panel" id="wallpaper-modal">
+        <div class="wallpaper-panel glass-panel-fixed" id="wallpaper-modal">
             <div class="wallpaper-grid" id="wallpaper-grid"></div>
         </div>
     </div>
